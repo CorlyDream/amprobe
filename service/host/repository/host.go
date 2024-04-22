@@ -77,7 +77,9 @@ func (h HostRepo) MemUsage(ctx context.Context, args schema.MemoryUsageArgs) ([]
 
 func (h HostRepo) DiskInfo(ctx context.Context) ([]model.Disk, error) {
 	var diskInfos []model.Disk
-	if err := h.DB.Model(&model.Disk{}).Group("device").Order("timestamp desc").Find(&diskInfos).Error; err != nil {
+	subQuery := h.DB.Model(&model.Disk{}).Select("max(id)").Group("device")
+
+	if err := h.DB.Model(&model.Disk{}).Where("id IN (?)", subQuery).Find(&diskInfos).Error; err != nil {
 		return diskInfos, err
 	}
 	return diskInfos, nil

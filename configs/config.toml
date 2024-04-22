@@ -60,7 +60,7 @@ MaxAge = "7"            # 最多保留 7 天的日志
 
 [Auth]
 # 是否启用
-Enable = true
+Enable = false
 # 签名方式(支持：HS512/HS384/HS512)
 SigningMethod = "HS512"
 # 签名key
