@@ -25,3 +25,4 @@ deploy.sh
 */deploy.sh
 */pwd
 */dist/*
+.vscode

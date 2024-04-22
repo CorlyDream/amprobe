@@ -17,17 +17,19 @@ func TestGetMemInfo(t *testing.T) {
 }
 
 func TestGetDiskPercent(t *testing.T) {
-	devices := map[string]struct{}{"/dev/vda3": {}}
+	devices := map[string]struct{}{"/dev/disk3s1s1": {}}
 	diskMap, err := GetDiskInfo(devices)
 	t.Log(diskMap, err)
 }
 
 func TestGetNetworkPercent(t *testing.T) {
-	netMap, err := GetNetworkIO()
+	devices := map[string]struct{}{"en0": {}}
+	netMap, err := GetNetworkIO(devices)
 	t.Log(netMap, err)
 }
 
 func TestGetDiskIO(t *testing.T) {
-	diskMap, err := GetDiskIO()
+	devices := map[string]struct{}{"disk0": {}}
+	diskMap, err := GetDiskIO(devices)
 	t.Log(diskMap, err)
 }

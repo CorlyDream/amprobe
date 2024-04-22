@@ -71,6 +71,7 @@ type Disk struct {
 
 type Task struct {
 	Interval int
+	NotMonitorDocker bool
 }
 
 type Ethernet struct {

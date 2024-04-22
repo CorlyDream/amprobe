@@ -26,6 +26,7 @@ type TimedTask struct {
 	ticker   timex.Ticker
 	stopCh   chan struct{}
 	cache    *cache.Cache
+	notMonitorDocker bool
 }
 
 func NewTimedTask(conf *Config, db *database.DB) *TimedTask {
@@ -54,6 +55,7 @@ func NewTimedTask(conf *Config, db *database.DB) *TimedTask {
 		db:       db,
 		manager:  manager,
 		cache:    cache.New(5*time.Minute, 60*time.Second),
+		notMonitorDocker: conf.Task.NotMonitorDocker,
 	}
 }
 
@@ -66,12 +68,15 @@ func (a *TimedTask) Execute() {
 	go a.disk(timestamp)
 	go a.network(timestamp)
 
-	// // 处理 Docker 容器指标
-	go a.container(timestamp)
-	go func() {
-		a.docker(timestamp)
-		a.image(timestamp)
-	}()
+	if a.notMonitorDocker {
+	    // 处理 Docker 容器指标
+		go a.container(timestamp)
+		go func() {
+			a.docker(timestamp)
+			a.image(timestamp)
+		}()
+	}
+
 
 	go a.clearOldRecord()
 }
