@@ -89,10 +89,11 @@ func GetDiskIO(devices map[string]struct{}) (map[string]DiskIO, error) {
 
 	// 将获取到的磁盘IO信息填充到map中
 	for k, v := range stat {
-		if _, ok := devices[k]; !ok {
+		deviceName := "/dev/" + k
+		if _, ok := devices[deviceName]; !ok {
 			continue
 		}
-		diskMap[k] = DiskIO{
+		diskMap[deviceName] = DiskIO{
 			Read:  v.ReadCount,
 			Write: v.WriteCount,
 		}

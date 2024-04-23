@@ -330,9 +330,6 @@ watch(
     background-color: #ffffff;
     .el-row {
         margin-bottom: 4px;
-        .el-col {
-            height: 300px;
-        }
     }
 
     .el-card {

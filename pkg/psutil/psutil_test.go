@@ -20,6 +20,8 @@ func TestGetDiskPercent(t *testing.T) {
 	devices := map[string]struct{}{"/dev/disk3s1s1": {}}
 	diskMap, err := GetDiskInfo(devices)
 	t.Log(diskMap, err)
+	diskIoMap, errIo := GetDiskIO(devices)
+	t.Log(diskIoMap, errIo)
 }
 
 func TestGetNetworkPercent(t *testing.T) {
