@@ -173,14 +173,14 @@ func (h HostService) NetUsage(ctx context.Context, args schema.NetworkUsageArgs)
 		usage, ok := netMap[item.Ethernet]
 		if !ok {
 			usage = schema.NetworkUsageReply{Ethernet: item.Ethernet}
-			usage.Data = make([]schema.NetIO, 100)
-			netMap[item.Ethernet] = usage
+			usage.Data = make([]schema.NetIO, 0)
 		}
 		usage.Data = append(usage.Data, schema.NetIO{
 			Timestamp: item.CreatedAt.Unix(),
 			BytesSent: item.NetSend,
 			BytesRecv: item.NetRecv,
 		})
+		netMap[item.Ethernet] = usage
 	}
 	list := make([]schema.NetworkUsageReply, 0)
 	for _, item := range netMap {

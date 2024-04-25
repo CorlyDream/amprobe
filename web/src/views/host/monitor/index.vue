@@ -28,22 +28,22 @@
             </el-col>
         </el-row>
         <el-row :gutter="4">
-            <el-col :span="12" v-for="(item) in diskOptionList" :key="String(item.device)">
+            <el-col :span="12" v-for="(item) in netOptionList" :key="item.sourceInfo.ethernet">
+                <el-card>
+                    <echarts :option="item">
+                        <div class="am-host-container__image-title">流量曲线图</div>
+                        <div class="am-host-container__image-description">
+                            {{ item.sourceInfo.ethernet }} 接收：{{ item.sourceInfo.read }} 发送：{{ item.sourceInfo.write }}
+                        </div>
+                    </echarts>
+                </el-card>
+            </el-col>
+            <el-col :span="12" v-for="(item, index) in diskOptionList" :key="index">
                 <el-card>
                     <echarts :option="item">
                         <div class="am-host-container__image-title">磁盘使用率</div>
                         <div class="am-host-container__image-description">
                            目录：{{ (item.sourceInfo as DiskUsage).mountpoint }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比： {{ (item.sourceInfo as DiskUsage).percent }}
-                        </div>
-                    </echarts>
-                </el-card>
-            </el-col>
-            <el-col :span="12">
-                <el-card>
-                    <echarts :option="netOption">
-                        <div class="am-host-container__image-title">流量曲线图</div>
-                        <div class="am-host-container__image-description">
-                            {{ netInfo.ethernet }} 接收：{{ netInfo.read }} 发送：{{ netInfo.write }}
                         </div>
                     </echarts>
                 </el-card>
@@ -206,9 +206,6 @@ const renderDisk = async () => {
     const newDiskOptionList = diskData.map((item: DiskUsage) => {
         const newOption: EChartsOption = {
             ...diskOptions,
-            // title: {
-            //     text: item.device+" 目录： "+item.mountpoint+" 总量： "+convertBytesToReadable(item.total)+" 使用： "+convertBytesToReadable(item.used)+" 百分比： "+item.percent.toFixed(2) + '%'
-            // },
             sourceInfo: {
                 device: item.device,
                 total: convertBytesToReadable(item.total),
@@ -246,13 +243,7 @@ const renderDisk = async () => {
     diskOptionList.value = newDiskOptionList
 }
 
-const netInfo = ref({
-    ethernet: '',
-    read: '',
-    write: ''
-})
-
-const netOption = reactive<EChartsOption>(netOptions) as EChartsOption
+const netOptionList = ref(<EChartsOption[]>([]) as EChartsOption[])
 const renderNet = async () => {
     const param: NetTrendingArgs = {
         start_time: dayjs().unix() - timeDensity.value,
@@ -261,36 +252,46 @@ const renderNet = async () => {
     console.log(param)
     const { data } = await queryNetworkUsage(param)
     const netData = data
-    netInfo.value.ethernet = netData.ethernet
-    netInfo.value.read = convertBytesToReadable(netData.data[netData.data.length - 1].bytes_recv)
-    netInfo.value.write = convertBytesToReadable(netData.data[netData.data.length - 1].bytes_sent)
-    console.log('net response: ', netData.ethernet, netData.data)
-    // set(netOption, 'title', { text: '流量曲线图' });
-    set(
-        netOption,
-        'xAxis.data',
-        netData.data.map(
-            (item: NetIO) => dayjs(item.timestamp * 1000).hour() + ':' + dayjs(item.timestamp * 1000).minute()
-        )
-    )
-    set(netOption, 'legend.data', ['Receive', 'Send'])
-    set(netOption, 'series', [
-        {
-            name: 'Receive',
-            data: netData.data.map((item: NetIO) => item.bytes_recv),
-            type: 'line',
-            smooth: true,
-            showSymbol: false
-        },
-        {
-            name: 'Send',
-            data: netData.data.map((item: NetIO) => item.bytes_sent),
-            type: 'line',
-            smooth: true,
-            showSymbol: false
+    console.log('net response: ', netData)
+    const newNetOptionList = netData.map((item) => {
+        // sum up the bytes_recv and bytes_sent
+        var totalRecv =  item.data.reduce((acc: number, cur: NetIO) => acc + cur.bytes_recv, 0)
+        var totalSent =  item.data.reduce((acc: number, cur: NetIO) => acc + cur.bytes_sent, 0)
+        const netOption: EChartsOption = {
+            ...netOptions,
+            sourceInfo: {
+                ethernet: item.ethernet,
+                read: convertBytesToReadable(totalRecv),
+                write: convertBytesToReadable(totalSent)
+            },
+            xAxis: {
+                data: item.data.map(
+                    (item: NetIO) => dayjs(item.timestamp * 1000).hour() + ':' + dayjs(item.timestamp * 1000).minute()
+                )
+            },
+            legend: {
+                data: ['Receive', 'Send']
+            },
+            series: [
+                {
+                    name: 'Receive',
+                    data: item.data.map((item: NetIO) => item.bytes_recv),
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false
+                },
+                {
+                    name: 'Send',
+                    data: item.data.map((item: NetIO) => item.bytes_sent),
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false
+                }
+            ]
         }
-    ])
-    console.log('net options: ', netOption)
+        return netOption
+    })
+    netOptionList.value = newNetOptionList
 }
 const timer = ref()
 onMounted(() => {

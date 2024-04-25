@@ -47,5 +47,5 @@ export function queryDiskUsage(param: DiskTrendingArgs) {
 }
 
 export function queryNetworkUsage(param: NetTrendingArgs) {
-    return request.get<NetUsage>('/api/v1/host/net_trending', param)
+    return request.get<NetUsage[]>('/api/v1/host/net_trending', param)
 }
