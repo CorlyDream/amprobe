@@ -28,16 +28,12 @@
             </el-col>
         </el-row>
         <el-row :gutter="4">
-            <el-col :span="12">
+            <el-col :span="12" v-for="(item, index) in diskOptionList" :key="index">
                 <el-card>
-                    <echarts :option="diskOption">
+                    <echarts :option="item">
                         <div class="am-host-container__image-title">磁盘使用率</div>
-                        <div
-                            v-for="(item, index) in diskInfo"
-                            :key="index"
-                            class="am-host-container__image-description"
-                        >
-                            {{ item.device }} 总量：{{ item.total }} 使用：{{ item.used }} 百分比： {{ item.percent }}
+                        <div class="am-host-container__image-description">
+                            {{ (item.sourceInfo as DiskUsage).device }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比： {{ (item.sourceInfo as DiskUsage).percent }}
                         </div>
                     </echarts>
                 </el-card>
@@ -67,7 +63,7 @@ import {
 } from '@/api/host'
 import { EChartsOption } from '@/components/Echarts/echarts.ts'
 import { cpuOptions, diskOptions, memOptions, netOptions } from '@/components/Echarts/line.ts'
-import { CPUTrendingArgs, DiskIO, DiskTrendingArgs, MemTrendingArgs, NetIO, NetTrendingArgs } from '@/interface/host.ts'
+import { CPUTrendingArgs, DiskIO, DiskTrendingArgs, DiskUsage, MemTrendingArgs, NetIO, NetTrendingArgs } from '@/interface/host.ts'
 import { convertBytesToReadable } from '@/utils/convert.ts'
 import { dayjs } from 'element-plus'
 import { set } from 'lodash-es'
@@ -185,7 +181,7 @@ const diskInfo = ref<
 
 const renderDiskInfo = async () => {
     const { data } = await queryDiskInfo()
-    console.log(data.info)
+    console.log(data)
     diskInfo.value = []
     data.info.map((item) => {
         diskInfo.value.push({
@@ -197,7 +193,7 @@ const renderDiskInfo = async () => {
     })
 }
 
-const diskOption = reactive<EChartsOption>(diskOptions) as EChartsOption
+const diskOptionList = ref(<EChartsOption[]>([]) as EChartsOption[])
 const renderDisk = async () => {
     const param: DiskTrendingArgs = {
         start_time: dayjs().unix() - timeDensity.value,
@@ -206,34 +202,47 @@ const renderDisk = async () => {
     console.log(param)
     const { data } = await queryDiskUsage(param)
     const diskData = data
-    console.log('********<<<<>>>>>>*****', diskData, diskData.data, diskData.device)
-    console.log('disk response: ', diskData.device, diskData.data)
-    // set(diskOption, 'title', { text: '磁盘使用率' });
-    set(
-        diskOption,
-        'xAxis.data',
-        diskData.data.map(
-            (item: DiskIO) => dayjs(item.timestamp * 1000).hour() + ':' + dayjs(item.timestamp * 1000).minute()
-        )
-    )
-    set(diskOption, 'legend.data', ['Read', 'Write'])
-    set(diskOption, 'series', [
-        {
-            name: 'Read',
-            data: diskData.data.map((item: DiskIO) => item.io_read),
-            type: 'line',
-            smooth: true,
-            showSymbol: false
-        },
-        {
-            name: 'Write',
-            data: diskData.data.map((item: DiskIO) => item.io_write),
-            type: 'line',
-            smooth: true,
-            showSymbol: false
+    console.log('disk response: ', diskData)
+    const newDiskOptionList = diskData.map((item: DiskUsage) => {
+        const newOption: EChartsOption = {
+            ...diskOptions,
+            // title: {
+            //     text: item.device+" 目录： "+item.mountpoint+" 总量： "+convertBytesToReadable(item.total)+" 使用： "+convertBytesToReadable(item.used)+" 百分比： "+item.percent.toFixed(2) + '%'
+            // },
+            sourceInfo: {
+                device: item.device,
+                total: convertBytesToReadable(item.total),
+                used: convertBytesToReadable(item.used),
+                percent: item.percent.toFixed(2) + '%'
+            },
+            xAxis: {
+                data: item.data.map(
+                    (item: DiskIO) => dayjs(item.timestamp * 1000).hour() + ':' + dayjs(item.timestamp * 1000).minute()
+                )
+            },
+            legend: {
+                data: ['Read', 'Write']
+            },
+            series: [
+                {
+                    name: 'Read',
+                    data: item.data.map((item: DiskIO) => item.io_read),
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false
+                },
+                {
+                    name: 'Write',
+                    data: item.data.map((item: DiskIO) => item.io_write),
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: false
+                }
+            ]
         }
-    ])
-    console.log('disk options: ', diskOption)
+        return newOption
+    })
+    diskOptionList.value = newDiskOptionList
 }
 
 const netInfo = ref({
@@ -289,7 +298,6 @@ onMounted(() => {
     renderCPU()
     renderMemInfo()
     renderMem()
-    renderDiskInfo()
     renderDisk()
     renderNet()
     timer.value = setInterval(() => {
@@ -298,7 +306,6 @@ onMounted(() => {
         renderCPU()
         renderMemInfo()
         renderMem()
-        renderDiskInfo()
         renderDisk()
         renderNet()
     }, 5000)

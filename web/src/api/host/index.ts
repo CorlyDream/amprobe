@@ -43,7 +43,7 @@ export function queryDiskInfo() {
 }
 
 export function queryDiskUsage(param: DiskTrendingArgs) {
-    return request.get<DiskUsage>('/api/v1/host/disk_trending', param)
+    return request.get<DiskUsage[]>('/api/v1/host/disk_trending', param)
 }
 
 export function queryNetworkUsage(param: NetTrendingArgs) {

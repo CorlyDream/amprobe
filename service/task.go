@@ -65,7 +65,7 @@ func (a *TimedTask) Execute() {
 	go a.host(timestamp)
 	go a.cpu(timestamp)
 	go a.memory(timestamp)
-	go a.disk(timestamp)
+	go a.disk()
 	go a.network(timestamp)
 
 	if a.notMonitorDocker {
@@ -131,7 +131,7 @@ func (a *TimedTask) memory(timestamp time.Time) {
 	})
 }
 
-func (a *TimedTask) disk(timestamp time.Time) {
+func (a *TimedTask) disk() {
 	diskMap, _ := psutil.GetDiskIO(a.devices)
 	var diskInfos []model.Disk
 	for device, state := range diskMap {
@@ -139,7 +139,11 @@ func (a *TimedTask) disk(timestamp time.Time) {
 		disk.DiskRead = float64(state.Read)
 		disk.DiskWrite = float64(state.Write)
 		diskInfos = append(diskInfos, disk)
-
+	}
+	// check diskInfos is empty
+	if len(diskInfos) == 0 {
+		slog.Error("diskInfos is empty")
+		return
 	}
 	a.db.Model(&model.Disk{}).Create(diskInfos)
 }

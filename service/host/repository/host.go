@@ -87,7 +87,7 @@ func (h HostRepo) DiskInfo(ctx context.Context) ([]model.Disk, error) {
 
 func (h HostRepo) DiskUsage(ctx context.Context, args schema.DiskUsageArgs) ([]model.Disk, error) {
 	var diskInfos []model.Disk
-	if err := h.DB.Model(&model.Disk{}).Where("timestamp > ?", time.Unix(args.StartTime, 0)).Order("timestamp asc").Find(&diskInfos).Error; err != nil {
+	if err := h.DB.Model(&model.Disk{}).Where("created_at > ?", time.Unix(args.StartTime, 0)).Order("created_at asc").Find(&diskInfos).Error; err != nil {
 		return diskInfos, err
 	}
 	return diskInfos, nil

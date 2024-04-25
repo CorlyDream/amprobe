@@ -44,7 +44,7 @@ DBName = "/tmp/probe"
 SSLMode = ""
 
 [Disk]
-Devices = ["/dev/disk3s5", "/dev/disk3s1s1"]
+Devices = ["/dev/disk3s5", "/dev/disk0"]
 
 [Ethernet]
 Names = ["en0"]

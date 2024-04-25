@@ -28,6 +28,10 @@ export interface DiskIO {
 
 export interface DiskUsage {
     device: string
+    mountpoint: string
+    percent: number
+    total: number
+    used: number
     data: DiskIO[]
 }
 
