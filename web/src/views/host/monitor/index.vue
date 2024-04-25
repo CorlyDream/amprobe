@@ -28,12 +28,12 @@
             </el-col>
         </el-row>
         <el-row :gutter="4">
-            <el-col :span="12" v-for="(item) in netOptionList" :key="item.sourceInfo.ethernet">
+            <el-col :span="12" v-for="(item) in netOptionList" :key="(item.sourceInfo as NetInfo).ethernet">
                 <el-card>
                     <echarts :option="item">
                         <div class="am-host-container__image-title">流量曲线图</div>
                         <div class="am-host-container__image-description">
-                            {{ item.sourceInfo.ethernet }} 接收：{{ item.sourceInfo.read }} 发送：{{ item.sourceInfo.write }}
+                            {{ (item.sourceInfo as NetInfo).ethernet }} 接收：{{ (item.sourceInfo as NetInfo).read }} 发送：{{ (item.sourceInfo as NetInfo).write }}
                         </div>
                     </echarts>
                 </el-card>
@@ -63,7 +63,7 @@ import {
 } from '@/api/host'
 import { EChartsOption } from '@/components/Echarts/echarts.ts'
 import { cpuOptions, diskOptions, memOptions, netOptions } from '@/components/Echarts/line.ts'
-import { CPUTrendingArgs, DiskIO, DiskTrendingArgs, DiskUsage, MemTrendingArgs, NetIO, NetTrendingArgs } from '@/interface/host.ts'
+import { CPUTrendingArgs, DiskIO, DiskTrendingArgs, DiskUsage, MemTrendingArgs, NetInfo, NetIO, NetTrendingArgs } from '@/interface/host.ts'
 import { convertBytesToReadable } from '@/utils/convert.ts'
 import { dayjs } from 'element-plus'
 import { set } from 'lodash-es'

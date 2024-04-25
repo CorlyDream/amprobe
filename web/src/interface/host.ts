@@ -35,6 +35,12 @@ export interface DiskUsage {
     data: DiskIO[]
 }
 
+export interface NetInfo{
+    ethernet: string
+    read: string
+    write: string
+}
+
 export interface NetIO {
     timestamp: number
     bytes_sent: number
