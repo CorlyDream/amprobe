@@ -28,12 +28,12 @@
             </el-col>
         </el-row>
         <el-row :gutter="4">
-            <el-col :span="12" v-for="(item, index) in diskOptionList" :key="index">
+            <el-col :span="12" v-for="(item) in diskOptionList" :key="String(item.device)">
                 <el-card>
                     <echarts :option="item">
                         <div class="am-host-container__image-title">磁盘使用率</div>
                         <div class="am-host-container__image-description">
-                            {{ (item.sourceInfo as DiskUsage).device }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比： {{ (item.sourceInfo as DiskUsage).percent }}
+                           目录：{{ (item.sourceInfo as DiskUsage).mountpoint }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比： {{ (item.sourceInfo as DiskUsage).percent }}
                         </div>
                     </echarts>
                 </el-card>
@@ -213,7 +213,8 @@ const renderDisk = async () => {
                 device: item.device,
                 total: convertBytesToReadable(item.total),
                 used: convertBytesToReadable(item.used),
-                percent: item.percent.toFixed(2) + '%'
+                percent: item.percent.toFixed(2) + '%',
+                mountpoint: item.mountpoint
             },
             xAxis: {
                 data: item.data.map(
@@ -333,7 +334,8 @@ watch(
 
 <style scoped lang="scss">
 @include b(host-container) {
-    overflow: hidden;
+    overflow: scroll;
+    height: 100%;
     background-color: #ffffff;
     .el-row {
         margin-bottom: 4px;

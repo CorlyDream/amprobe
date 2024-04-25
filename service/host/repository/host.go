@@ -95,7 +95,7 @@ func (h HostRepo) DiskUsage(ctx context.Context, args schema.DiskUsageArgs) ([]m
 
 func (h HostRepo) NetUsage(ctx context.Context, args schema.NetworkUsageArgs) ([]model.Net, error) {
 	var netInfos []model.Net
-	if err := h.DB.Model(&model.Net{}).Where("timestamp > ?", time.Unix(args.StartTime, 0)).Order("timestamp asc").Find(&netInfos).Error; err != nil {
+	if err := h.DB.Model(&model.Net{}).Where("created_at > ?", time.Unix(args.StartTime, 0)).Order("created_at asc").Find(&netInfos).Error; err != nil {
 		return netInfos, err
 	}
 	return netInfos, nil

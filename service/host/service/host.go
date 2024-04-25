@@ -6,6 +6,7 @@ package service
 
 import (
 	"context"
+	"sort"
 
 	"github.com/amuluze/amprobe/pkg/psutil"
 	"github.com/amuluze/amprobe/service/host/repository"
@@ -23,7 +24,7 @@ type IHostService interface {
 	MemUsage(ctx context.Context, args schema.MemoryUsageArgs) (schema.MemoryUsageReply, error)
 	DiskUsage(ctx context.Context, args schema.DiskUsageArgs) (schema.DiskUsageReply, error)
 	DiskUsages(ctx context.Context, args schema.DiskUsageArgs) ([]schema.DiskUsageReply, error)
-	NetUsage(ctx context.Context, args schema.NetworkUsageArgs) (schema.NetworkUsageReply, error)
+	NetUsage(ctx context.Context, args schema.NetworkUsageArgs) ([]schema.NetworkUsageReply, error)
 }
 
 type HostService struct {
@@ -137,6 +138,9 @@ func (h HostService) DiskUsages(ctx context.Context, args schema.DiskUsageArgs) 
 			Used: diskInfos[device].Used,
 		})
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Device < list[j].Device
+	})
 	return list, nil
 }
 
@@ -159,20 +163,27 @@ func (h HostService) DiskUsage(ctx context.Context, args schema.DiskUsageArgs) (
 	return schema.DiskUsageReply{Device: device, Data: mDisk}, nil
 }
 
-func (h HostService) NetUsage(ctx context.Context, args schema.NetworkUsageArgs) (schema.NetworkUsageReply, error) {
+func (h HostService) NetUsage(ctx context.Context, args schema.NetworkUsageArgs) ([]schema.NetworkUsageReply, error) {
 	netInfos, err := h.HostRepo.NetUsage(ctx, args)
 	if err != nil {
-		return schema.NetworkUsageReply{}, err
+		return []schema.NetworkUsageReply{}, err
 	}
-	mNet := make([]schema.NetIO, 0)
-	ethernet := ""
+	netMap := make(map[string]schema.NetworkUsageReply)
 	for _, item := range netInfos {
-		ethernet = item.Ethernet
-		mNet = append(mNet, schema.NetIO{
-			Timestamp: item.Timestamp.Unix(),
+		usage, ok := netMap[item.Ethernet]
+		if !ok {
+			usage = schema.NetworkUsageReply{Ethernet: item.Ethernet}
+			netMap[item.Ethernet] = usage
+		}
+		usage.Data = append(usage.Data, schema.NetIO{
+			Timestamp: item.CreatedAt.Unix(),
 			BytesSent: item.NetSend,
 			BytesRecv: item.NetRecv,
 		})
 	}
-	return schema.NetworkUsageReply{Data: mNet, Ethernet: ethernet}, nil
+	list := make([]schema.NetworkUsageReply, 1)
+	for _, item := range netMap {
+		list = append(list, item)
+	}
+	return list, nil
 }

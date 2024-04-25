@@ -81,8 +81,7 @@ func (d *Disk) TableName() string {
 // }
 
 type Net struct {
-	gorm.Model
-	Timestamp time.Time
+	SeriesModel
 	Ethernet  string
 	NetRecv   float64
 	NetSend   float64

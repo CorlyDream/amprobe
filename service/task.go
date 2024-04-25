@@ -156,7 +156,7 @@ func (a *TimedTask) network(timestamp time.Time) {
 	for eth, info := range netMap {
 		for e, i := range netMapAfterSecond {
 			if eth == e {
-				net := model.Net{Timestamp: timestamp}
+				net := model.Net{}
 				net.Ethernet = eth
 				net.NetSend = float64(i.Send - info.Send)
 				net.NetRecv = float64(i.Recv - info.Recv)
