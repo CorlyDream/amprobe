@@ -65,12 +65,8 @@ func (d *Memory) TableName() string {
 // }
 
 type Disk struct {
-	gorm.Model
-	Timestamp   time.Time
+	SeriesModel
 	Device      string
-	DiskPercent float64
-	DiskTotal   float64
-	DiskUsed    float64
 	DiskRead    float64
 	DiskWrite   float64
 }

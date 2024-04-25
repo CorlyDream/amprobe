@@ -78,7 +78,11 @@ type DiskUsageArgs struct {
 
 type DiskUsageReply struct {
 	Device string   `json:"device"`
+	Mountpoint string `json:"mountpoint"`
 	Data   []DiskIO `json:"data"`
+	Total   uint64	`json:"total"`
+	Percent float64	`json:"percent"`
+	Used    uint64	`json:"used"`
 }
 
 type NetworkUsageArgs struct {

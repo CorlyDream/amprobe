@@ -6,6 +6,7 @@ package psutil
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
@@ -16,6 +17,7 @@ import (
 )
 
 type DiskInfo struct {
+	Mountpoint string
 	Total   uint64
 	Percent float64
 	Used    uint64
@@ -73,6 +75,7 @@ func GetDiskInfo(devices map[string]struct{}) (map[string]DiskInfo, error) {
 				Total:   usedInfo.Total,
 				Percent: usedInfo.UsedPercent,
 				Used:    usedInfo.Used,
+				Mountpoint: info.Mountpoint,
 			}
 		}
 	}
@@ -135,6 +138,22 @@ func GetSystemInfo() (*SystemInfo, error) {
 		KernelArch:      info.KernelArch,
 	}
 	return systemInfo, nil
+}
+
+// disk device -> mountpoint
+var deviceMountCache = sync.Map{}
+func GetDiskDeviceMount(device string) (string) {
+	if v, ok := deviceMountCache.Load(device); ok {
+		return v.(string)
+	}
+	infos, _ := disk.Partitions(false)
+	for _, info := range infos {
+		if info.Device == device {
+			deviceMountCache.Store(device, info.Mountpoint)
+			return info.Mountpoint
+		}
+	}
+	return ""
 }
 
 // 字节单位转换

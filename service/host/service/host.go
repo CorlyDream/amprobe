@@ -6,7 +6,8 @@ package service
 
 import (
 	"context"
-	
+
+	"github.com/amuluze/amprobe/pkg/psutil"
 	"github.com/amuluze/amprobe/service/host/repository"
 	"github.com/amuluze/amprobe/service/schema"
 	"github.com/google/wire"
@@ -20,8 +21,8 @@ type IHostService interface {
 	CPUUsage(ctx context.Context, args schema.CPUUsageArgs) (schema.CPUUsageReply, error)
 	MemInfo(ctx context.Context) (schema.MemoryInfoReply, error)
 	MemUsage(ctx context.Context, args schema.MemoryUsageArgs) (schema.MemoryUsageReply, error)
-	DiskInfo(ctx context.Context) (schema.DiskInfoReply, error)
 	DiskUsage(ctx context.Context, args schema.DiskUsageArgs) (schema.DiskUsageReply, error)
+	DiskUsages(ctx context.Context, args schema.DiskUsageArgs) ([]schema.DiskUsageReply, error)
 	NetUsage(ctx context.Context, args schema.NetworkUsageArgs) (schema.NetworkUsageReply, error)
 }
 
@@ -96,22 +97,47 @@ func (h HostService) MemUsage(ctx context.Context, args schema.MemoryUsageArgs) 
 	return schema.MemoryUsageReply{Data: list}, nil
 }
 
-func (h HostService) DiskInfo(ctx context.Context) (schema.DiskInfoReply, error) {
-	diskInfos, err := h.HostRepo.DiskInfo(ctx)
+func (h HostService) DiskUsages(ctx context.Context, args schema.DiskUsageArgs) ([]schema.DiskUsageReply, error) {
+
+	diskUsages, err := h.HostRepo.DiskUsage(ctx, args)
 	if err != nil {
-		return schema.DiskInfoReply{}, err
+		return []schema.DiskUsageReply{}, err
 	}
-	var list []schema.DiskInfo
-	for _, di := range diskInfos {
-		list = append(list, schema.DiskInfo{
-			Device:  di.Device,
-			Percent: di.DiskPercent,
-			Total:   di.DiskTotal,
-			Used:    di.DiskUsed,
+
+	diskMap := make(map[string][]schema.DiskIO)
+	devices := make(map[string]struct{})
+	// add serias data
+	for _, item := range diskUsages {
+		device := item.Device
+		// 获取当前设备的切片
+		diskIOs, ok := diskMap[device]
+		if !ok {
+			// 如果设备还没有在 map 中，创建一个新的切片
+			diskIOs = []schema.DiskIO{}
+			devices[device] = struct{}{}
+		}
+		// 将新的 DiskIO 添加到切片中
+		diskIOs = append(diskIOs, schema.DiskIO{
+			Timestamp: item.CreatedAt.Unix(),
+			IORead:    item.DiskRead,
+			IOWrite:   item.DiskWrite,
+		})
+		// 将更新后的切片放回 map 中
+		diskMap[device] = diskIOs
+	}
+	diskInfos,_ := psutil.GetDiskInfo(devices)
+	var list []schema.DiskUsageReply
+	for device, diskIOs := range diskMap {
+		list = append(list, schema.DiskUsageReply{
+			Device: device,
+			Data:   diskIOs,
+			Mountpoint: diskInfos[device].Mountpoint,
+			Total: diskInfos[device].Total,
+			Percent: diskInfos[device].Percent,
+			Used: diskInfos[device].Used,
 		})
 	}
-	
-	return schema.DiskInfoReply{Info: list}, err
+	return list, nil
 }
 
 func (h HostService) DiskUsage(ctx context.Context, args schema.DiskUsageArgs) (schema.DiskUsageReply, error) {
@@ -119,13 +145,13 @@ func (h HostService) DiskUsage(ctx context.Context, args schema.DiskUsageArgs) (
 	if err != nil {
 		return schema.DiskUsageReply{}, err
 	}
-	
+
 	mDisk := make([]schema.DiskIO, 0)
 	device := ""
 	for _, item := range diskInfos {
 		device = item.Device
 		mDisk = append(mDisk, schema.DiskIO{
-			Timestamp: item.Timestamp.Unix(),
+			Timestamp: item.CreatedAt.Unix(),
 			IORead:    item.DiskRead,
 			IOWrite:   item.DiskWrite,
 		})

@@ -19,13 +19,13 @@ import (
 )
 
 type TimedTask struct {
-	db       *database.DB
-	manager  *docker.Manager
-	devices  map[string]struct{}
-	ethernet map[string]struct{}
-	ticker   timex.Ticker
-	stopCh   chan struct{}
-	cache    *cache.Cache
+	db               *database.DB
+	manager          *docker.Manager
+	devices          map[string]struct{}
+	ethernet         map[string]struct{}
+	ticker           timex.Ticker
+	stopCh           chan struct{}
+	cache            *cache.Cache
 	notMonitorDocker bool
 }
 
@@ -48,13 +48,13 @@ func NewTimedTask(conf *Config, db *database.DB) *TimedTask {
 	}
 
 	return &TimedTask{
-		devices:  dev,
-		ethernet: eth,
-		ticker:   tk,
-		stopCh:   make(chan struct{}),
-		db:       db,
-		manager:  manager,
-		cache:    cache.New(5*time.Minute, 60*time.Second),
+		devices:          dev,
+		ethernet:         eth,
+		ticker:           tk,
+		stopCh:           make(chan struct{}),
+		db:               db,
+		manager:          manager,
+		cache:            cache.New(5*time.Minute, 60*time.Second),
 		notMonitorDocker: conf.Task.NotMonitorDocker,
 	}
 }
@@ -69,14 +69,13 @@ func (a *TimedTask) Execute() {
 	go a.network(timestamp)
 
 	if a.notMonitorDocker {
-	    // 处理 Docker 容器指标
+		// 处理 Docker 容器指标
 		go a.container(timestamp)
 		go func() {
 			a.docker(timestamp)
 			a.image(timestamp)
 		}()
 	}
-
 
 	go a.clearOldRecord()
 }
@@ -133,22 +132,14 @@ func (a *TimedTask) memory(timestamp time.Time) {
 }
 
 func (a *TimedTask) disk(timestamp time.Time) {
-	diskInfo, _ := psutil.GetDiskInfo(a.devices)
 	diskMap, _ := psutil.GetDiskIO(a.devices)
 	var diskInfos []model.Disk
-	for device, info := range diskInfo {
-		disk := model.Disk{Timestamp: timestamp}
-		disk.Device = device
-		disk.DiskPercent = info.Percent
-		disk.DiskTotal = float64(info.Total)
-		disk.DiskUsed = float64(info.Used)
-		for dev, state := range diskMap {
-			if dev == device {
-				disk.DiskRead = float64(state.Read)
-				disk.DiskWrite = float64(state.Write)
-			}
-		}
+	for device, state := range diskMap {
+		disk := model.Disk{Device: device}
+		disk.DiskRead = float64(state.Read)
+		disk.DiskWrite = float64(state.Write)
 		diskInfos = append(diskInfos, disk)
+
 	}
 	a.db.Model(&model.Disk{}).Create(diskInfos)
 }

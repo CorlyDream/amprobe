@@ -22,6 +22,8 @@ func TestGetDiskPercent(t *testing.T) {
 	t.Log(diskMap, err)
 	diskIoMap, errIo := GetDiskIO(devices)
 	t.Log(diskIoMap, errIo)
+	mountpoint := GetDiskDeviceMount("/dev/disk3s1s1")
+	t.Log(mountpoint)
 }
 
 func TestGetNetworkPercent(t *testing.T) {

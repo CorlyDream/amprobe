@@ -26,3 +26,5 @@ deploy.sh
 */pwd
 */dist/*
 .vscode
+*.log
+

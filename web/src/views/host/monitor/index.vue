@@ -73,7 +73,7 @@ import { dayjs } from 'element-plus'
 import { set } from 'lodash-es'
 
 // 时间密度下拉框
-const timeDensity = ref(600)
+const timeDensity = ref(43200)
 const options = [
     {
         value: 600,
@@ -330,6 +330,9 @@ watch(
     background-color: #ffffff;
     .el-row {
         margin-bottom: 4px;
+        .el-col {
+            height: 310px;
+        }
     }
 
     .el-card {

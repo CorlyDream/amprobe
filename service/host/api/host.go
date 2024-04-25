@@ -81,12 +81,7 @@ func (a *HostAPI) MemUsage(ctx *fiber.Ctx) error {
 }
 
 func (a *HostAPI) DiskInfo(ctx *fiber.Ctx) error {
-	c := ctx.UserContext()
-	diskInfo, err := a.HostService.DiskInfo(c)
-	if err != nil {
-		return fiberx.Failure(ctx, err)
-	}
-	return fiberx.Success(ctx, diskInfo)
+	return fiberx.Success(ctx, nil)
 }
 
 func (a *HostAPI) DiskUsage(ctx *fiber.Ctx) error {
@@ -98,7 +93,7 @@ func (a *HostAPI) DiskUsage(ctx *fiber.Ctx) error {
 	if err := validatex.ValidateStruct(args); err != nil {
 		return fiberx.Failure(ctx, errors.ErrBadRequest)
 	}
-	usage, err := a.HostService.DiskUsage(c, args)
+	usage, err := a.HostService.DiskUsages(c, args)
 	if err != nil {
 		return fiberx.Failure(ctx, err)
 	}
