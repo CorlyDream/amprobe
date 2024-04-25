@@ -182,7 +182,7 @@ func (h HostService) NetUsage(ctx context.Context, args schema.NetworkUsageArgs)
 			BytesRecv: item.NetRecv,
 		})
 	}
-	list := make([]schema.NetworkUsageReply, 1)
+	list := make([]schema.NetworkUsageReply, 0)
 	for _, item := range netMap {
 		list = append(list, item)
 	}
