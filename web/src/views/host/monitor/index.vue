@@ -43,7 +43,7 @@
                     <echarts :option="item">
                         <div class="am-host-container__image-title">磁盘使用率</div>
                         <div class="am-host-container__image-description">
-                           目录：{{ (item.sourceInfo as DiskUsage).mountpoint }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比： {{ (item.sourceInfo as DiskUsage).percent }}
+                           目录：{{ (item.sourceInfo as DiskUsage).mountpoint }} 总量：{{ (item.sourceInfo as DiskUsage).total }} 使用：{{ (item.sourceInfo as DiskUsage).used }} 百分比：{{ (item.sourceInfo as DiskUsage).percent }}
                         </div>
                     </echarts>
                 </el-card>
