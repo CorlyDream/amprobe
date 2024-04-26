@@ -66,7 +66,7 @@ func (a *TimedTask) Execute() {
 	go a.cpu(timestamp)
 	go a.memory(timestamp)
 	go a.disk()
-	go a.network(timestamp)
+	go a.network()
 
 	if a.notMonitorDocker {
 		// 处理 Docker 容器指标
@@ -133,11 +133,14 @@ func (a *TimedTask) memory(timestamp time.Time) {
 
 func (a *TimedTask) disk() {
 	diskMap, _ := psutil.GetDiskIO(a.devices)
+	time.Sleep(1 * time.Second)
+	diskMapAfterSecond, _ := psutil.GetDiskIO(a.devices)
 	var diskInfos []model.Disk
 	for device, state := range diskMap {
+		i := diskMapAfterSecond[device]
 		disk := model.Disk{Device: device}
-		disk.DiskRead = float64(state.Read)
-		disk.DiskWrite = float64(state.Write)
+		disk.DiskRead = float64(i.Read - state.Read)
+		disk.DiskWrite = float64(i.Write - state.Write)
 		diskInfos = append(diskInfos, disk)
 	}
 	// check diskInfos is empty
@@ -148,21 +151,18 @@ func (a *TimedTask) disk() {
 	a.db.Model(&model.Disk{}).Create(diskInfos)
 }
 
-func (a *TimedTask) network(timestamp time.Time) {
+func (a *TimedTask) network() {
 	netMap, _ := psutil.GetNetworkIO(a.ethernet)
 	time.Sleep(1 * time.Second)
 	netMapAfterSecond, _ := psutil.GetNetworkIO(a.ethernet)
 	var netInfos []model.Net
 	for eth, info := range netMap {
-		for e, i := range netMapAfterSecond {
-			if eth == e {
-				net := model.Net{}
-				net.Ethernet = eth
-				net.NetSend = float64(i.Send - info.Send)
-				net.NetRecv = float64(i.Recv - info.Recv)
-				netInfos = append(netInfos, net)
-			}
-		}
+		i := netMapAfterSecond[eth]
+		net := model.Net{}
+		net.Ethernet = eth
+		net.NetSend = float64(i.Send - info.Send)
+		net.NetRecv = float64(i.Recv - info.Recv)
+		netInfos = append(netInfos, net)
 	}
 	a.db.Model(&model.Net{}).Create(netInfos)
 }
@@ -287,6 +287,6 @@ func (a *TimedTask) clearOldRecord() {
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Minute*5)).Delete(&model.Docker{})
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.CPU{})
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Memory{})
-	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Disk{})
-	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Net{})
+	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Disk{})
+	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Net{})
 }

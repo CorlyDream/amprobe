@@ -67,8 +67,8 @@ func (d *Memory) TableName() string {
 type Disk struct {
 	SeriesModel
 	Device      string
-	DiskRead    float64
-	DiskWrite   float64
+	DiskRead    float64 // disk read bytes
+	DiskWrite   float64 // disk write bytes
 }
 
 func (d *Disk) TableName() string {

@@ -97,8 +97,8 @@ func GetDiskIO(devices map[string]struct{}) (map[string]DiskIO, error) {
 			continue
 		}
 		diskMap[deviceName] = DiskIO{
-			Read:  v.ReadCount,
-			Write: v.WriteCount,
+			Read:  v.ReadBytes,
+			Write: v.WriteBytes,
 		}
 	}
 	return diskMap, nil
