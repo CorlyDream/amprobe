@@ -24,7 +24,7 @@ deploy.sh
 */.vitepress/cache/*
 */deploy.sh
 */pwd
-*/dist/*
+dist
 .vscode
 *.log
 
