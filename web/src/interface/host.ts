@@ -32,6 +32,7 @@ export interface DiskUsage {
     percent: number
     total: number
     used: number
+    remaing: number
     data: DiskIO[]
 }
 

@@ -287,6 +287,6 @@ func (a *TimedTask) clearOldRecord() {
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Minute*5)).Delete(&model.Docker{})
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.CPU{})
 	a.db.Where("timestamp < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Memory{})
-	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Disk{})
-	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*2)).Delete(&model.Net{})
+	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*5)).Delete(&model.Disk{})
+	a.db.Where("created_at < ?", time.Now().Add(-time.Hour*24*5)).Delete(&model.Net{})
 }
