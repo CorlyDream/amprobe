@@ -186,5 +186,8 @@ func (h HostService) NetUsage(ctx context.Context, args schema.NetworkUsageArgs)
 	for _, item := range netMap {
 		list = append(list, item)
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Ethernet < list[j].Ethernet
+	})
 	return list, nil
 }
