@@ -41,6 +41,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           title: ${{ env.TAG_NAME }}
+          tag: ${{ env.TAG_NAME }}
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
