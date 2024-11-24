@@ -5,10 +5,14 @@
 package service
 
 import (
+	"log"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/amuluze/amprobe/service/model"
 	"github.com/amuluze/amutool/database"
+	"gorm.io/gorm/logger"
 )
 
 func NewDB(config *Config, models *model.Models) (*database.DB, error) {
@@ -41,5 +45,13 @@ func NewDB(config *Config, models *model.Models) (*database.DB, error) {
 			return nil, err
 		}
 	}
+	db.Logger = logger.New(
+        log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+        logger.Config{
+            SlowThreshold: time.Second,   // 慢 SQL 阈值
+            LogLevel:      logger.Info,   // 日志级别
+            Colorful:      false,          // 禁用彩色打印
+        },
+    )
 	return db, nil
 }
